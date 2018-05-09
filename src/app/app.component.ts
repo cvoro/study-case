@@ -68,21 +68,6 @@ log(message) {
   logDiv.scrollTop = logDiv.scrollHeight;
 }
 
-
-
-//  attach(el) {
-//   if (typeof el === 'string') {
-//     el = document.getElementById('remote-media').c(el);
-//   } else if (!el) {
-//     el = this._createElement();
-//   }
-//   this._log.debug('Attempting to attach to element:', el);
-//   el = this._attach(el);
-
-//   return el;
-// };
-
-
   joinRoom(){
       this.roomName = document.getElementById('room-name')['value'];
       if (!this.roomName) {
@@ -104,16 +89,7 @@ log(message) {
         , function(error) {
           this.log('Could not connect to Twilio: ' + error.message);
       });
-      // Video.connect(this.data.token, {name:this.roomName}).then(function(room) {
-      //   console.log('Successfully joined a Room: ', room);
-      //   room.on('participantConnected', function(participant) {
-      //     console.log('A remote Participant connected: ', participant);
-      //   })
-      // }, function(error) {
-      //     console.error('Unable to connect to Room: ' +  error.message);
-      // });
   }
-  // this.roomJoined(this.activeRoom)
 
  roomJoined(room) {
     this.activeRoom = room
