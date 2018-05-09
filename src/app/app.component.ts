@@ -32,6 +32,12 @@ export class AppComponent {
     this.socket.emit('token')
   }
 
+ leaveRoomIfJoined() {
+    if (this.activeRoom) {
+      this.activeRoom.disconnect();
+    }
+  }
+
   cameraPreview(){
       var localTracksPromise = this.previewTracks
         ? Promise.resolve(this.previewTracks)
@@ -44,14 +50,38 @@ export class AppComponent {
         }
       }, function(error) {
         console.error('Unable to access local media', error);
+        this.log('Unable to access Camera and Microphone');
       });
   }
 
  attachTracks(tracks, container) {
     tracks.forEach(function(track) {
       container.appendChild(track.attach());
+      // window.alert(track)
     });
   }
+
+  // Activity log.
+log(message) {
+  var logDiv = document.getElementById('log');
+  logDiv.innerHTML += '<p>&gt;&nbsp;' + message + '</p>';
+  logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+
+
+//  attach(el) {
+//   if (typeof el === 'string') {
+//     el = document.getElementById('remote-media').c(el);
+//   } else if (!el) {
+//     el = this._createElement();
+//   }
+//   this._log.debug('Attempting to attach to element:', el);
+//   el = this._attach(el);
+
+//   return el;
+// };
+
 
   joinRoom(){
       this.roomName = document.getElementById('room-name')['value'];
@@ -69,14 +99,26 @@ export class AppComponent {
         connectOptions['tracks'] = this.previewTracks;
       }
   
-      Video.connect(this.data.token, connectOptions).then(
-        this.roomJoined(this.activeRoom), function(error) {
+      Video.connect(this.data.token, {name:this.roomName}).then(
+        (room)=>{this.roomJoined(room)}
+        , function(error) {
+          this.log('Could not connect to Twilio: ' + error.message);
       });
+      // Video.connect(this.data.token, {name:this.roomName}).then(function(room) {
+      //   console.log('Successfully joined a Room: ', room);
+      //   room.on('participantConnected', function(participant) {
+      //     console.log('A remote Participant connected: ', participant);
+      //   })
+      // }, function(error) {
+      //     console.error('Unable to connect to Room: ' +  error.message);
+      // });
   }
+  // this.roomJoined(this.activeRoom)
 
  roomJoined(room) {
-    this.activeRoom = room;
+    this.activeRoom = room
   
+  this.log("Joined as '" + this.identity + "'");
     document.getElementById('button-join').style.display = 'none';
     document.getElementById('button-leave').style.display = 'inline';
   
@@ -87,36 +129,40 @@ export class AppComponent {
     }
   
     // Attach the Tracks of the Room's Participants.
-    room.participants.forEach(function(participant) {
+    room.participants.forEach((participant)=> {
+      this.log("Already in Room: '" + participant.identity + "'");
       var previewContainer = document.getElementById('remote-media');
       this.attachParticipantTracks(participant, previewContainer);
     });
   
     // When a Participant joins the Room, log the event.
-    room.on('participantConnected', function(participant) {
-      console.log("Joining: '" + participant.identity + "'");
+    room.on('participantConnected', (participant) => {
+      this.log("Joining: '" + participant.identity + "'");
     });
   
     // When a Participant adds a Track, attach it to the DOM.
-    room.on('trackAdded', function(track, participant) {
-      // log(participant.identity + " added track: " + track.kind);
+    room.on('trackAdded', (track, participant) => {
+      this.log(participant.identity + " added track: " + track.kind);
       var previewContainer = document.getElementById('remote-media');
       this.attachTracks([track], previewContainer);
     });
   
     // When a Participant removes a Track, detach it from the DOM.
-    room.on('trackRemoved', function(track, participant) {
+    room.on('trackRemoved', (track, participant)  => {
+      this.log(participant.identity + " removed track: " + track.kind);
       this.detachTracks([track]);
     });
   
     // When a Participant leaves the Room, detach its Tracks.
-    room.on('participantDisconnected', function(participant) {
+    room.on('participantDisconnected', (participant) => {
+      this.log("Participant '" + participant.identity + "' left the room");
       this.detachParticipantTracks(participant);
     });
   
-    room.on('disconnected', function() {
+    room.on('disconnected', () => {
+      this.log('Left')
       if (this.previewTracks) {
-        this.previewTracks.forEach(function(track) {
+        this.previewTracks.forEach((track) => {
           track.stop();
         });
       }
@@ -131,5 +177,17 @@ export class AppComponent {
 attachParticipantTracks(participant, container) {
     var tracks = Array.from(participant.tracks.values());
     this.attachTracks(tracks, container);
+  }
+
+  detachParticipantTracks(participant) {
+    var tracks = Array.from(participant.tracks.values());
+    this.detachTracks(tracks);
+  }
+  detachTracks(tracks) {
+    tracks.forEach(function(track) {
+      track.detach().forEach(function(detachedElement) {
+        detachedElement.remove();
+      });
+    });
   }
 }

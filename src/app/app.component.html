@@ -24,11 +24,13 @@
     <div id="local-media"></div>
     <button id="button-preview" (click)="cameraPreview()">Preview My Camera</button>
   </div>
-  <div id="room-controls">
+
+
+  <div id="room-controls" style="display: inline-block;">
     <p class="instructions">Room Name:</p>
     <input id="room-name" type="text" placeholder="Enter a room name" />
     <button id="button-join" (click)="getToken()">Join Room</button>
-    <button id="button-leave" (click)="testFunction()">Leave Room</button>
+    <button id="button-leave"  (click)="leaveRoomIfJoined()">Leave Room</button>
   </div>
   <div id="log"></div>
 </div>

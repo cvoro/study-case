@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 var app = express();
 var io = require('socket.io')(http); 
 require('dotenv').load();
+var randomName = require('./randomname');
 
 var AccessToken = require('twilio').jwt.AccessToken;
 var VideoGrant = AccessToken.VideoGrant;
@@ -29,12 +30,12 @@ app.set('port', port)
   //socketio event listeners
 io.on('connection', function(socket){ 
   socket.on('token', function(user){ 
-    var identity = 'testUser'
+    var identity = randomName()
 
   var token = new AccessToken(
-    "AC3eab34b392fea8541b274dd8e0376d78",
-    "SK5e209eb720a631e07da00b9ba9139996",
-    "Pm5ci3qL3wwQBKZdZy4fBnMEb7xNHMjZ"
+    'AC3eab34b392fea8541b274dd8e0376d78',
+    'SK5e209eb720a631e07da00b9ba9139996',
+    'Pm5ci3qL3wwQBKZdZy4fBnMEb7xNHMjZ'
   );
 
   // Assign the generated identity to the token.
@@ -43,6 +44,8 @@ io.on('connection', function(socket){
   // Grant the access token Twilio Video capabilities.
   var grant = new VideoGrant();
   token.addGrant(grant);
+
+  console.log(token)
 
   // Serialize the token to a JWT string and include it in a JSON response.
 
